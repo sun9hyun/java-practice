@@ -1,0 +1,135 @@
+package dao;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
+import model.Member;
+
+
+public class UserDAO {
+
+	   private final int KEY = 3;
+	   
+	   public Connection connection; 
+	   public PreparedStatement preparedStatement; 
+	   public ResultSet resultSet; 
+//	   아이디 중복 검사
+	   public boolean checkId(String id) {
+
+	      String query = "SELECT COUNT(MEMBER_ID) FROM TBL_MEMBER WHERE MEMBER_ID = ?";
+	      boolean check = false;
+	      try {
+
+	         connection = DBConnecter.getConnection();
+	         preparedStatement = connection.prepareStatement(query);
+	         preparedStatement.setString(1, id);
+	         resultSet = preparedStatement.executeQuery();
+
+	         resultSet.next();
+	         check = resultSet.getInt(1) == 1;
+	         
+	      } catch (SQLException e) {
+	         System.out.println("checkId()에서 쿼리문 오류");
+	      } finally {
+	         try {
+
+	            if(resultSet != null) {
+	               resultSet.close();
+	            }
+	            if(preparedStatement != null) {
+	               preparedStatement.close();
+	            }
+	            if(connection != null) {
+	               connection.close();
+	            }
+	         } catch (SQLException e) {
+	            throw new RuntimeException(e.getMessage());
+	         }
+	      }
+	      
+	      return check;
+	   }
+
+//		회원가입
+		public void insert(Member member) {
+
+		String query = "INSERT INTO TBL_MEMBER "
+         + "(MEMBER_NUMBER, MEMBER_NAME,MEMBER_ID,MEMBER_PASSWORD)"
+         + "VALUES(SEQ_MEMBER.NEXTVAL, ?, ?, ?)";
+   
+		try {
+
+			connection = DBConnecter.getConnection();
+
+			preparedStatement = connection.prepareStatement(query);
+
+			
+			preparedStatement.setString(1, member.getMemberName());
+			preparedStatement.setString(2, member.getMemberId());
+			preparedStatement.setString(3, member.getMemberPassword());
+
+
+			preparedStatement.executeUpdate();
+      
+		} catch (SQLException e) {
+			System.out.println(e);
+			System.out.println("insert()에서 쿼리문 오류");
+
+		} finally {
+			try {
+				if(preparedStatement != null) {
+					preparedStatement.close();
+				}
+				if(connection != null) {
+					connection.close();
+				}
+			} catch (SQLException e) {
+				throw new RuntimeException(e.getMessage());
+			}	
+		}
+	}
+//		로그인
+		 	public int login(String memberId, String memberPassword) {
+
+		    String query = "SELECT MEMBER_NUMBER FROM TBL_MEMBER WHERE MEMBER_ID = ? AND MEMBER_PASSWORD = ?";
+
+		      int memberNumber = 0;
+		      try {
+
+		         connection = DBConnecter.getConnection();
+
+		         preparedStatement = connection.prepareStatement(query);
+
+		         preparedStatement.setString(1, memberId);
+		         preparedStatement.setString(2, memberPassword);
+
+		         resultSet = preparedStatement.executeQuery();
+
+		         if(resultSet.next()) {
+
+		        	 memberNumber = resultSet.getInt("MEMBER_NUMBER");
+		         }
+		         
+		      } catch (SQLException e) {
+		         e.printStackTrace();
+		         System.out.println("login() 쿼리문 오류");
+		      } finally {
+		         try {
+		            if(resultSet != null) {
+		               resultSet.close();
+		            }
+		            if(preparedStatement != null) {
+		               preparedStatement.close();
+		            }
+		            if(connection != null) {
+		               connection.close();
+		            }
+		         } catch (SQLException e) {
+		            throw new RuntimeException(e.getMessage());
+		         }
+		      }
+		      return memberNumber;
+		   }
+}

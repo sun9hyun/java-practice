@@ -1,0 +1,88 @@
+package dao;
+
+import java.util.ArrayList;
+
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.chrome.ChromeDriver;
+
+import model.Card;
+
+
+
+public class Crawling {
+	private WebDriver webDriver;
+	public static final String WEB_DRIVER_PATH = "C:/chromedriver.exe";
+	public static final String WEB_DRIVER_ID = "webdriver.chrome.driver";
+	public static ArrayList<String> informations = new ArrayList<String>();
+	public static ArrayList<String> names = new ArrayList<String>();
+	public static ArrayList<String> options = new ArrayList<String>();
+	public static ArrayList<String>  discountRates= new ArrayList<String>();
+	public static ArrayList<String> hrefs = new ArrayList<String>();
+	
+	DbMethod key = new DbMethod();
+	
+	public void createArrays() {
+		Crawling crawling = new Crawling();
+		WebDriver driver = crawling.webDriver;
+		System.setProperty(WEB_DRIVER_ID, WEB_DRIVER_PATH);
+		driver = new ChromeDriver();
+		String url = "https://www.card-gorilla.com/chart/top100?term=weekly";
+		String href = null;
+		int size=0, k=0;
+		
+		driver.get(url);
+		try {Thread.sleep(1000);} catch (InterruptedException e) {}
+		
+		for (WebElement webElement : driver.findElements(By.cssSelector(".lst_wrap .rk_lst .detail_view a"))) {
+			href = webElement.getAttribute("href");
+			hrefs.add(href);
+		}
+		
+		for (int i = 0; i < hrefs.size(); i++) {
+			driver.get(hrefs.get(i));
+			try {Thread.sleep(1000);} catch (InterruptedException e) {}
+//			정보
+			for (WebElement webElement : driver.findElements(By.cssSelector(".bnf1"))) {
+				informations.add(webElement.getText());
+		}
+//			이름
+			for (WebElement webElement : driver.findElements(By.cssSelector("div.tit strong.card"))) {
+				names.add(webElement.getText());
+			}
+			
+			String [] info = informations.get(i).split("\\n");
+			size = info.length;
+			for (int j = 0; j <size; j++) {
+				if(j%2 ==0) {
+					options.add(info[j]);
+				}else {
+					discountRates.add(info[j]);
+				}
+			}
+			//db에 넣기
+			Card card = new Card();
+			card.setCardName(names.get(i));
+			card.setOptionOne(info[0]);
+			card.setOptionTwo(info[2]);
+			card.setDetailOne(info[1]);
+			card.setDetailTwo(info[3]);
+			if(size>=5) {
+				card.setOptionThree(info[4]);
+				card.setDetailThree(info[5]);
+				key.insert(card);
+		}//if
+
+	}//for
+	
+		driver.quit();
+	}//createArrays
+	
+	
+	
+	
+
+		
+	
+}
