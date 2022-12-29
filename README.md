@@ -1,5 +1,6 @@
 # java-practice
 
+
  * for문과 while문의 목적
    - for : 몇 번 반복할 지 알 때
    - while : 몇 번 반복할 지 모를 때
